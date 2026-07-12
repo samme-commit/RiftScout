@@ -53,6 +53,33 @@ const modeInformation: Record<
   },
 };
 
+type LaneIconProps = {
+  src: string;
+  className?: string;
+};
+
+function LaneIcon({
+  src,
+  className = "",
+}: LaneIconProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-block shrink-0 bg-current ${className}`}
+      style={{
+        WebkitMaskImage: `url("${src}")`,
+        maskImage: `url("${src}")`,
+        WebkitMaskRepeat: "no-repeat",
+        maskRepeat: "no-repeat",
+        WebkitMaskPosition: "center",
+        maskPosition: "center",
+        WebkitMaskSize: "contain",
+        maskSize: "contain",
+      }}
+    />
+  );
+}
+
 export function SetupWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -201,6 +228,7 @@ export function SetupWizard() {
       role: selectedRole.id,
       champion: selectedChampion.id,
       championName: selectedChampion.name,
+      version: dataDragonVersion,
     });
 
     router.push(`/scout?${params.toString()}`);
@@ -324,23 +352,28 @@ export function SetupWizard() {
                     aria-pressed={selected}
                     onClick={() => handleRoleSelect(role.id)}
                     className={[
-                      "group relative min-h-[168px] border p-5 text-left transition duration-300",
+                      "group relative flex min-h-[168px] flex-col border p-5 text-left",
+                      "transition duration-300",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0ac8b9]",
                       selected
                         ? "-translate-y-1 border-[#c89b3c]/65 bg-[#c89b3c]/7 shadow-[0_18px_45px_rgba(0,0,0,0.24)]"
                         : "border-white/[0.085] bg-white/[0.018] hover:-translate-y-1 hover:border-white/[0.18] hover:bg-white/[0.035]",
                     ].join(" ")}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex h-12 w-full items-start justify-between">
                       <div
                         className={[
-                          "grid h-10 w-10 place-items-center border transition",
+                          "grid h-12 w-12 shrink-0 place-items-center border",
+                          "transition duration-300",
                           selected
-                            ? "border-[#c89b3c]/35 bg-[#c89b3c]/10 text-[#e1bd63]"
-                            : "border-white/[0.09] bg-[#07131b] text-[#83969f] group-hover:text-white",
+                            ? "border-[#c89b3c]/40 bg-[#c89b3c]/10 text-[#e1bd63]"
+                            : "border-white/[0.09] bg-[#07131b] text-[#71858f] group-hover:border-white/[0.16] group-hover:text-[#b8c7cd]",
                         ].join(" ")}
                       >
-                        <FontAwesomeIcon icon={role.icon} />
+                        <LaneIcon
+                          src={role.iconPath}
+                          className="h-6 w-6"
+                        />
                       </div>
 
                       {selected && (

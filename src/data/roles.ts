@@ -1,12 +1,3 @@
-import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import {
-  faBullseye,
-  faHandHoldingHeart,
-  faLeaf,
-  faShieldHalved,
-  faWandMagicSparkles,
-} from "@fortawesome/free-solid-svg-icons";
-
 export type RoleId = "top" | "jungle" | "mid" | "adc" | "support";
 
 export type Role = {
@@ -14,7 +5,7 @@ export type Role = {
   name: string;
   shortName: string;
   description: string;
-  icon: IconDefinition;
+  iconPath: string;
   suggestedChampions: string[];
 };
 
@@ -24,7 +15,7 @@ export const roles: Role[] = [
     name: "Top",
     shortName: "TOP",
     description: "Solo lane fighters, tanks and split pushers.",
-    icon: faShieldHalved,
+    iconPath: "/icons/roles/top.png",
     suggestedChampions: [
       "Aatrox",
       "Camille",
@@ -41,7 +32,7 @@ export const roles: Role[] = [
     name: "Jungle",
     shortName: "JGL",
     description: "Control objectives, pathing and map pressure.",
-    icon: faLeaf,
+    iconPath: "/icons/roles/jungle.png",
     suggestedChampions: [
       "Amumu",
       "Diana",
@@ -58,7 +49,7 @@ export const roles: Role[] = [
     name: "Mid",
     shortName: "MID",
     description: "Mages, assassins and central map control.",
-    icon: faWandMagicSparkles,
+    iconPath: "/icons/roles/mid.png",
     suggestedChampions: [
       "Ahri",
       "Katarina",
@@ -75,7 +66,7 @@ export const roles: Role[] = [
     name: "ADC",
     shortName: "ADC",
     description: "Ranged carries focused on consistent damage.",
-    icon: faBullseye,
+    iconPath: "/icons/roles/adc.png",
     suggestedChampions: [
       "Ashe",
       "Caitlyn",
@@ -92,7 +83,7 @@ export const roles: Role[] = [
     name: "Support",
     shortName: "SUP",
     description: "Protect allies, engage fights and control vision.",
-    icon: faHandHoldingHeart,
+    iconPath: "/icons/roles/support.png",
     suggestedChampions: [
       "Leona",
       "Lulu",
