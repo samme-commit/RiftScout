@@ -175,7 +175,7 @@ export async function analyzeRiotOpponents(
   for (const opponent of opponents) {
     if (opponent.games === 0) {
       warnings.push(
-        `${opponent.riotId} had no recent Summoner's Rift matches available.`,
+        `${opponent.riotId} had no recent matches in the assigned ${opponent.role} role among the ${MATCHES_TO_REQUEST} Summoner's Rift matches checked.`,
       );
     }
   }
@@ -275,10 +275,29 @@ async function analyzeSingleOpponent(
         participant !== undefined,
     );
 
+  /**
+   * Only analyze matches where the player actually played
+   * the role assigned to them in the opponent form.
+   *
+   * Example:
+   * Support row -> only UTILITY matches
+   * Jungle row  -> only JUNGLE matches
+   */
+  const roleMatchedParticipants =
+    summonersRiftParticipants.filter((participant) => {
+      const detectedRole = normalizeRiotPosition(
+        participant.teamPosition ||
+          participant.individualPosition ||
+          "",
+      );
+
+      return detectedRole === opponent.role;
+    });
+
   const result = createOpponentResult(
     opponent,
     account,
-    summonersRiftParticipants,
+    roleMatchedParticipants,
     selectedRole,
   );
 
@@ -286,6 +305,8 @@ async function analyzeSingleOpponent(
 
   return result;
 }
+
+
 
 async function getMatch(
   regionalRoute: RegionalRoute,
@@ -537,8 +558,15 @@ async function riotFetch<T>(
   route: RegionalRoute,
   path: string,
 ): Promise<T> {
-  const apiKey = process.env.RIOT_API_KEY;
+  const apiKey = process.env.RIOT_API_KEY?.trim();
 
+  console.log("Riot key check:", {
+    loaded: Boolean(apiKey),
+    correctPrefix: apiKey?.startsWith("RGAPI-"),
+    length: apiKey?.length,
+    ending: apiKey?.slice(-4),
+  });
+  
   if (!apiKey) {
     throw new RiotApiError(
       500,

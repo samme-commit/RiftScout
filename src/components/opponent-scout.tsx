@@ -139,9 +139,6 @@ const initialOpponents: OpponentInput[] = (
   tagLine: "",
 }));
 
-const [analysisError, setAnalysisError] =
-  useState("");
-
 export function OpponentScout() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,6 +163,8 @@ export function OpponentScout() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] =
     useState<AnalysisResult | null>(null);
+
+  const [analysisError, setAnalysisError] = useState("");
 
   const selectedRegion = useMemo(
     () => regions.find((item) => item.id === region) ?? regions[0],
