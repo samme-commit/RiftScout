@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+:root {
+  --background: #03070b;
+  --background-soft: #071018;
+  --surface: rgba(8, 20, 29, 0.74);
+  --surface-strong: rgba(10, 25, 36, 0.94);
+
+  --border: rgba(161, 196, 211, 0.14);
+  --border-strong: rgba(200, 155, 60, 0.42);
+
+  --text-primary: #f4f7f8;
+  --text-secondary: #a5b5be;
+  --text-muted: #6f818c;
+
+  --gold: #c89b3c;
+  --gold-light: #f0d58a;
+  --cyan: #0ac8b9;
+  --cyan-soft: #079b91;
+
+  --danger: #ef5a67;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+input {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(10, 200, 185, 0.28);
+  color: #ffffff;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.rift-background {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 12% 4%,
+      rgba(10, 200, 185, 0.13),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 88% 16%,
+      rgba(200, 155, 60, 0.11),
+      transparent 30rem
+    ),
+    radial-gradient(
+      circle at 50% 100%,
+      rgba(8, 55, 73, 0.2),
+      transparent 34rem
+    ),
+    linear-gradient(145deg, #020609 0%, #061018 48%, #03070b 100%);
+}
+
+.rift-background::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  pointer-events: none;
+  opacity: 0.13;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.055) 1px,
+      transparent 1px
+    );
+  background-size: 68px 68px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+.rift-background::after {
+  position: fixed;
+  top: -14rem;
+  left: 50%;
+  z-index: -1;
+  width: 38rem;
+  height: 38rem;
+  content: "";
+  pointer-events: none;
+  border: 1px solid rgba(200, 155, 60, 0.08);
+  border-radius: 999px;
+  transform: translateX(-50%);
+  box-shadow:
+    0 0 0 5rem rgba(200, 155, 60, 0.018),
+    0 0 0 10rem rgba(10, 200, 185, 0.012);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.gold-text {
+  background: linear-gradient(135deg, #fff1bb 0%, #c89b3c 52%, #f0d58a 100%);
+  background-clip: text;
+  color: transparent;
+}
+
+.glass-panel {
+  border: 1px solid var(--border);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.045),
+      rgba(255, 255, 255, 0.012)
+    ),
+    rgba(5, 15, 22, 0.72);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(22px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
