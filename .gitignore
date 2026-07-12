@@ -50,3 +50,8 @@ desktop.ini
 # Temporary files
 *.tmp
 *.temp
+
+# ENV
+.env
+.env.local
+.env.*.local

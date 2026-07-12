@@ -30,6 +30,10 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
+import type {
+  RiotAnalysisResult as AnalysisResult,
+  RiotOpponentResult as OpponentResult,
+} from "@/types/riot";
 
 type RoleId = "top" | "jungle" | "mid" | "adc" | "support";
 
@@ -37,30 +41,6 @@ type OpponentInput = {
   role: RoleId;
   gameName: string;
   tagLine: string;
-};
-
-type OpponentResult = {
-  role: RoleId;
-  riotId: string;
-  primaryChampion: string;
-  secondaryChampion: string;
-  games: number;
-  winRate: number;
-  threatScore: number;
-  confidence: "High" | "Medium";
-};
-
-type BanRecommendation = {
-  champion: string;
-  score: number;
-  role: RoleId;
-  targetPlayer: string;
-  reasons: string[];
-};
-
-type AnalysisResult = {
-  opponents: OpponentResult[];
-  recommendations: BanRecommendation[];
 };
 
 type FieldErrors = Partial<
@@ -151,54 +131,6 @@ const regions = [
   },
 ];
 
-const championPools: Record<RoleId, string[]> = {
-  top: [
-    "Fiora",
-    "Darius",
-    "Camille",
-    "Jax",
-    "Aatrox",
-    "Yone",
-    "Ornn",
-  ],
-  jungle: [
-    "Nocturne",
-    "Lillia",
-    "Viego",
-    "Kayn",
-    "Lee Sin",
-    "Diana",
-    "Jarvan IV",
-  ],
-  mid: [
-    "Katarina",
-    "Zed",
-    "Ahri",
-    "Sylas",
-    "Yone",
-    "Veigar",
-    "Syndra",
-  ],
-  adc: [
-    "Jinx",
-    "Caitlyn",
-    "Kai'Sa",
-    "Jhin",
-    "Ezreal",
-    "Ashe",
-    "Smolder",
-  ],
-  support: [
-    "Thresh",
-    "Pyke",
-    "Nautilus",
-    "Leona",
-    "Lulu",
-    "Rakan",
-    "Nami",
-  ],
-};
-
 const initialOpponents: OpponentInput[] = (
   Object.keys(roleInformation) as RoleId[]
 ).map((role) => ({
@@ -206,6 +138,9 @@ const initialOpponents: OpponentInput[] = (
   gameName: "",
   tagLine: "",
 }));
+
+const [analysisError, setAnalysisError] =
+  useState("");
 
 export function OpponentScout() {
   const router = useRouter();
@@ -402,38 +337,72 @@ export function OpponentScout() {
 
   async function handleAnalyze() {
     if (isAnalyzing) {
-      return;
+        return;
     }
 
     const validation = validateOpponents();
 
     if (!validation.valid) {
-      return;
+        setAnalysisError(
+        validation.hasCompleteOpponent
+            ? "Complete every partially entered Riot ID."
+            : "Enter at least one complete Riot ID.",
+        );
+
+        return;
     }
 
     setIsAnalyzing(true);
     setAnalysisResult(null);
+    setAnalysisError("");
 
-    await new Promise((resolve) => {
-      window.setTimeout(resolve, 1400);
-    });
+    try {
+        const response = await fetch("/api/riot/analyze", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            region,
+            mode,
+            selectedRole,
+            championName,
+            opponents: completedOpponents,
+        }),
+        });
 
-    const result = generateMockAnalysis(
-      completedOpponents,
-      selectedRole,
-      championName,
-    );
+        const result = (await response.json()) as
+        | AnalysisResult
+        | {
+            error?: string;
+            };
 
-    setAnalysisResult(result);
-    setIsAnalyzing(false);
+        if (!response.ok) {
+        throw new Error(
+            "error" in result && result.error
+            ? result.error
+            : "Opponent analysis failed.",
+        );
+        }
 
-    window.setTimeout(() => {
-      resultsRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    }, 100);
-  }
+        setAnalysisResult(result as AnalysisResult);
+
+        window.setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+        });
+        }, 100);
+    } catch (error) {
+        setAnalysisError(
+        error instanceof Error
+            ? error.message
+            : "Opponent analysis failed.",
+        );
+    } finally {
+        setIsAnalyzing(false);
+    }
+    }
 
   return (
     <div className="mx-auto max-w-[1240px] px-5 py-10 sm:px-7 lg:px-10 lg:py-14">
@@ -520,12 +489,13 @@ export function OpponentScout() {
 
               <div>
                 <p className="text-xs font-semibold text-[#c4d0d5]">
-                  Demo analysis
+                  Riot match data
                 </p>
 
                 <p className="mt-1 text-[11px] leading-5 text-[#71848d]">
-                  This version generates preview data. No real player
-                  statistics are fetched yet.
+                    RiftScout analyzes recent Summoner&apos;s Rift matches
+                    through Riot&apos;s official API. Results are cached briefly
+                    to protect rate limits.
                 </p>
               </div>
             </div>
@@ -1134,7 +1104,7 @@ const AnalysisResults = forwardRef<
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#0ac8b9]">
-              Demo analysis complete
+              Riot analysis complete
             </span>
 
             <h2 className="font-display mt-2 text-2xl font-semibold text-white sm:text-3xl">
@@ -1142,7 +1112,7 @@ const AnalysisResults = forwardRef<
             </h2>
 
             <p className="mt-3 text-sm text-[#788b94]">
-              Based on generated preview data for {championName}{" "}
+              Based on recent Summoner's Rift match history for {championName}{" "}
               {formatRole(selectedRole)} on {region}.
             </p>
           </div>
@@ -1156,6 +1126,26 @@ const AnalysisResults = forwardRef<
             Edit opponents
           </button>
         </div>
+
+        {result.warnings.length > 0 && (
+            <div className="mt-6 border border-[#c89b3c]/20 bg-[#c89b3c]/[0.04] p-4">
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#c89b3c]">
+                Analysis notes
+                </p>
+
+                <ul className="mt-3 space-y-2">
+                {result.warnings.map((warning) => (
+                    <li
+                    key={warning}
+                    className="flex items-start gap-2 text-xs leading-5 text-[#98a8af]"
+                    >
+                    <span className="mt-2 h-1 w-1 shrink-0 rotate-45 bg-[#c89b3c]" />
+                    {warning}
+                    </li>
+                ))}
+                </ul>
+            </div>
+        )}
 
         {primaryRecommendation && (
           <article className="glass-panel relative mt-7 overflow-hidden border-[#c89b3c]/30 p-5 sm:p-7">
@@ -1341,12 +1331,12 @@ function OpponentResultCard({
         />
 
         <ResultStat
-          label="Demo games"
+          label="Recent matches"
           value={String(opponent.games)}
         />
 
         <ResultStat
-          label="Demo win rate"
+          label="Recent win rate"
           value={`${opponent.winRate}%`}
         />
       </div>
@@ -1424,92 +1414,6 @@ function LaneIcon({
       }}
     />
   );
-}
-
-function generateMockAnalysis(
-  opponents: OpponentInput[],
-  selectedRole: RoleId,
-  championName: string,
-): AnalysisResult {
-  const opponentResults: OpponentResult[] = opponents.map(
-    (opponent) => {
-      const seed = createSeed(
-        `${opponent.gameName}-${opponent.tagLine}-${opponent.role}`,
-      );
-
-      const pool = championPools[opponent.role];
-      const primaryIndex = seed % pool.length;
-      const secondaryIndex = (primaryIndex + 2) % pool.length;
-
-      const roleBonus =
-        opponent.role === selectedRole ? 7 : 0;
-
-      return {
-        role: opponent.role,
-        riotId: `${opponent.gameName}#${opponent.tagLine}`,
-        primaryChampion: pool[primaryIndex],
-        secondaryChampion: pool[secondaryIndex],
-        games: 8 + (seed % 28),
-        winRate: 48 + (seed % 20),
-        threatScore: Math.min(
-          97,
-          66 + (seed % 25) + roleBonus,
-        ),
-        confidence: seed % 3 === 0 ? "Medium" : "High",
-      };
-    },
-  );
-
-  const sortedOpponents = [...opponentResults].sort(
-    (a, b) => b.threatScore - a.threatScore,
-  );
-
-  const uniqueRecommendations: BanRecommendation[] = [];
-
-  for (const opponent of sortedOpponents) {
-    if (
-      uniqueRecommendations.some(
-        (recommendation) =>
-          recommendation.champion ===
-          opponent.primaryChampion,
-      )
-    ) {
-      continue;
-    }
-
-    uniqueRecommendations.push({
-      champion: opponent.primaryChampion,
-      score: opponent.threatScore,
-      role: opponent.role,
-      targetPlayer: opponent.riotId,
-      reasons: [
-        `${opponent.primaryChampion} is generated as ${opponent.riotId}'s strongest comfort pick.`,
-        opponent.role === selectedRole
-          ? `This player is your likely direct lane opponent into ${championName}.`
-          : "The generated profile shows a concentrated champion pool.",
-        `${opponent.games} preview games produce a ${opponent.winRate}% demo win rate.`,
-      ],
-    });
-
-    if (uniqueRecommendations.length === 3) {
-      break;
-    }
-  }
-
-  return {
-    opponents: opponentResults,
-    recommendations: uniqueRecommendations,
-  };
-}
-
-function createSeed(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
 }
 
 function normalizeRole(value: string | null): RoleId {
